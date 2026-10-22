@@ -211,6 +211,11 @@
 		if ( gsap.registerPlugin ) {
 			gsap.registerPlugin( window.ScrollTrigger );
 		}
+		// Lock scroll position so mobile address bar show/hide doesn't
+		// shift the scrub animation and cause a hop.
+		if ( window.ScrollTrigger && typeof window.ScrollTrigger.normalizeScroll === 'function' ) {
+			window.ScrollTrigger.normalizeScroll( true );
+		}
 		each( roots, function ( root ) {
 			initRoot( root, gsap );
 		} );
