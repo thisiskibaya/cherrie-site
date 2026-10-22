@@ -96,7 +96,6 @@
 		var lines = qa( root, '.bakly-cine__line' );
 		var object = q( root, '.bakly-cine__object' );
 		var kicker = q( root, '.bakly-cine__kicker' );
-		var cta = q( root, '.bakly-cine__cta' );
 		var revealSection = q( root, '.bakly-cine__reveal' );
 		var revealInner = q( root, '.bakly-cine__reveal-title-inner' );
 		var revealKicker = q( root, '.bakly-cine__reveal-kicker' );
@@ -111,6 +110,7 @@
 				pin: 'pinned' === mode ? stage : false,
 				pinSpacing: 'pinned' === mode,
 				anticipatePin: 1,
+				invalidateOnRefresh: true,
 				onUpdate: function ( self ) {
 					setBg( root, stage, self.progress );
 				}
@@ -143,7 +143,8 @@
 					trigger: revealSection,
 					start: 'top 100%',
 					end: 'top 45%',
-					scrub: true
+					scrub: true,
+					invalidateOnRefresh: true
 				}
 			} );
 			if ( revealInner ) {
@@ -170,8 +171,7 @@
 				playEntrance( root, gsap );
 			} else {
 				var cta = q( root, '.bakly-cine__cta' );
-				if ( cta ) { gsap.set( cta, { opacity: 1, y: 0 } );
-				}
+				if ( cta ) { gsap.set( cta, { opacity: 1, y: 0 } ); }
 			}
 			playScrub( root, gsap );
 			if ( window.ScrollTrigger && window.ScrollTrigger.refresh ) {
@@ -214,6 +214,18 @@
 		each( roots, function ( root ) {
 			initRoot( root, gsap );
 		} );
+
+		// Mobile address bar show/hide changes viewport height; refresh ScrollTrigger
+		// so scrub positions stay accurate and the hero animation doesn't skip.
+		var resizeTimer = null;
+		function onResize() {
+			if ( resizeTimer ) { clearTimeout( resizeTimer ); }
+			resizeTimer = setTimeout( function () {
+				if ( window.ScrollTrigger ) { window.ScrollTrigger.refresh(); }
+			}, 150 );
+		}
+		window.addEventListener( 'resize', onResize, { passive: true } );
+		window.addEventListener( 'orientationchange', onResize, { passive: true } );
 	}
 
 	if ( document.readyState === 'loading' ) {
