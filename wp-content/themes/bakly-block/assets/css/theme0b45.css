@@ -917,6 +917,14 @@ body.editor-styles-wrapper .bakly-testimonial-avatar-fallback { width:3rem; heig
   font-weight:600; cursor:pointer; transition:background .2s ease;
 }
 .bakly-newsletter .wpcf7-submit:hover { background:#4c5733; }
+/* Newsletter input overflow safeguard — cap email input at container width */
+.bakly-newsletter .wpcf7-form input[type="email"],
+.bakly-newsletter .wpcf7-form input[name="your-email"] {
+  max-width: 100%;
+}
+.bakly-newsletter .wpcf7-form .wpcf7-form-control-wrap {
+  max-width: 100%;
+}
 .bakly-newsletter .wpcf7-response-output {
   margin-top:.8rem; padding:.6rem .9rem; border:none; border-radius:.75rem;
   background:rgba(104,50,146,.08); color:var(--bakly-purple); font-size:.9rem;
