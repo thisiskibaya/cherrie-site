@@ -92,6 +92,7 @@
 	}
 
 	function playScrub( root, gsap ) {
+		var cta = q( root, '.bakly-cine__cta' );
 		var stage = q( root, '.bakly-cine__stage' );
 		var lines = qa( root, '.bakly-cine__line' );
 		var object = q( root, '.bakly-cine__object' );
