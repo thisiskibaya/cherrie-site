@@ -3,3 +3,13 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+
+# Immutable scrape snapshots. The deployable artifact is public/.
+scrape/
+.build-public.tmp/
+.build-public.check/
+.build-public.old/
+
+# Python build caches.
+__pycache__/
+*.pyc

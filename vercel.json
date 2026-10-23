@@ -1,18 +1,41 @@
 {
-  "outputDirectory": ".",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "true",
+  "installCommand": "true",
+  "outputDirectory": "public",
+  "trailingSlash": true,
+  "cleanUrls": false,
   "headers": [
-    { "source": "/(.*)", "headers": [
-      { "key": "Access-Control-Allow-Origin", "value": "*" },
-      { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-      { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
-    ]},
-    { "source": "/wp-includes/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]},
-    { "source": "/wp-content/uploads/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]},
-    { "source": "/wp-content/plugins/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]},
-    { "source": "/wp-content/themes/bakly-block/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]}
-  ],
-  "rewrites": [
-    { "source": "/(.*)/", "destination": "/$1/index.html" },
-    { "source": "/wp-json/contact-form-7/:path*", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/wp-includes/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/wp-content/plugins/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/wp-content/themes/bakly-block/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/wp-content/uploads/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800" }
+      ]
+    }
   ]
 }

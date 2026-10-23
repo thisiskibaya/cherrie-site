@@ -1,1 +1,11 @@
-{ "name": "cherrie-site", "version": "1.0.0", "description": "Static scraped bakery site for cherrie-site.vercel.app", "scripts": { "build": "true" } }
+{
+  "name": "cherrie-site",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Static review build of the chérie bakery site",
+  "scripts": {
+    "build:site": "python3 scripts/build.py",
+    "verify": "python3 scripts/verify.py",
+    "check:repeatable": "python3 scripts/build.py --check-repeatable"
+  }
+}
