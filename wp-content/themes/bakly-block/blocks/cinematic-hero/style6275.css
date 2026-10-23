@@ -93,6 +93,31 @@
 }
 .bakly-cine__line-inner { display: block; will-change: transform; }
 
+.bakly-cine__reveal-hours {
+  position: relative;
+  max-width: min(30rem, 88vw);
+  margin: 1.25rem auto 0;
+  color: rgba(85, 36, 4, 0.78);
+  font-family: var(--wp--preset--font-family--poppins, inherit);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+  will-change: opacity, transform;
+}
+.bakly-cine__reveal-hours::before {
+  display: block;
+  width: 1.5rem;
+  height: 1px;
+  margin: 0 auto 0.65rem;
+  background: currentColor;
+  content: "";
+  opacity: 0.6;
+}
+
 /* Full-headline tone ramp: ONE #bea99b -> #ffffff sweep threaded continuously
    through all three lines. Each INNER paints the SAME gradient image — sized
    2.8em tall (2 x line pitch 0.78em + one box 1.24em) — anchored into its
@@ -299,10 +324,10 @@ a.bakly-cine__cta:hover { color: var(--bakly-cine-light); text-decoration: under
   .bakly-cine__object { width: min(26rem, 98%); aspect-ratio: 1 / 1; bottom: clamp(-7rem, -6%, -2.5rem); }
   .bakly-cine__copy { margin-top: -1.25rem; }
   .bakly-cine__kicker { font-size: 0.64rem; max-width: 92vw; }
+  .bakly-cine__reveal-hours { max-width: 90vw; font-size: 0.58rem; letter-spacing: 0.12em; text-indent: 0.12em; }
   .bakly-cine__reveal { min-height: 45svh; }
   .bakly-cine__reveal-title { font-size: clamp(3.25rem, 13vw, 5rem); }
   .bakly-cine__line:nth-child(1) { transform: translateX(-3%); }
   .bakly-cine__line:nth-child(2) { transform: translateX(4%); }
   .bakly-cine__line:nth-child(3) { transform: translateX(-1%); }
 }
-

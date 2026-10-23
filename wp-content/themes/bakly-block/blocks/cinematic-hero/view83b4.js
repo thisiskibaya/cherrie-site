@@ -85,7 +85,7 @@
 
 		// The bottom link belongs to the first composition, then settles in with it.
 		if ( cta ) {
-			tl.from( cta, { opacity: 0, y: 14, duration: 0.7 }, 0.9 );
+			tl.from( cta, { opacity: 0, y: 14, duration: 0.7 }, 1.35 );
 		}
 
 		return tl;
@@ -100,6 +100,7 @@
 		var revealSection = q( root, '.bakly-cine__reveal' );
 		var revealInner = q( root, '.bakly-cine__reveal-title-inner' );
 		var revealKicker = q( root, '.bakly-cine__reveal-kicker' );
+		var revealHours = q( root, '.bakly-cine__reveal-hours' );
 		var mode = root.getAttribute( 'data-scroll-mode' ) || 'scrub';
 
 		var tl = gsap.timeline( {
@@ -147,6 +148,9 @@
 			}
 			if ( revealKicker ) {
 				handoff.fromTo( revealKicker, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'none' }, 0.1 );
+			}
+			if ( revealHours ) {
+				handoff.fromTo( revealHours, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.5, ease: 'none' }, 0.28 );
 			}
 		}
 
