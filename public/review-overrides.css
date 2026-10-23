@@ -1,0 +1,54 @@
+/*
+ * Stable review-site overrides.
+ *
+ * These rules are intentionally separate from the hashed theme assets so a
+ * fresh HTTrack scrape can be rebuilt without patching generated filenames.
+ */
+
+/* The review build has no search backend. Keep the control out of the
+ * interface rather than leaving a form that can only fail. */
+.bakly-search-toggle,
+#bakly-search-panel {
+	display: none !important;
+}
+
+/* The CF7 newsletter form was authored with size="40"; keep the input inside
+ * the card at every viewport width. */
+.bakly-newsletter-form,
+.bakly-newsletter-form .wpcf7,
+.bakly-newsletter-form .wpcf7-form,
+.bakly-newsletter-form .wpcf7-form-control-wrap {
+	box-sizing: border-box;
+	max-width: 100%;
+	width: 100%;
+	min-width: 0;
+}
+
+.bakly-newsletter-form input[type="email"],
+.bakly-newsletter-form input[type="text"],
+.bakly-newsletter-form input[size] {
+	box-sizing: border-box;
+	max-width: 100%;
+	width: 100%;
+	min-width: 0;
+}
+
+/* Static-site feedback shown when a form is submitted. */
+.bakly-static-note {
+	box-sizing: border-box;
+	margin: 0.9rem auto 0;
+	max-width: 42rem;
+	padding: 0.7rem 1rem;
+	border: 1px solid rgba(85, 36, 4, 0.22);
+	border-radius: 0.65rem;
+	background: rgba(255, 255, 255, 0.72);
+	color: #552404;
+	font-size: 0.9rem;
+	line-height: 1.45;
+	text-align: center;
+}
+
+form[data-static-review="true"] [type="submit"] {
+	cursor: not-allowed;
+	opacity: 0.72;
+}

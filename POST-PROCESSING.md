@@ -20,7 +20,7 @@ bakery.local/
 │   ├── verify.py            # independent URL/reference gate
 │   └── overrides/           # stable, non-hashed review fixes
 ├── scrape/
-│   └── 2026-10-23/
+│   └── 2026-10-23-refresh-1450/
 │       └── bakery.local/    # immutable raw HTTrack snapshot (gitignored)
 ├── build-manifest.json      # source/output hashes + repair report
 ├── package.json             # local convenience commands
@@ -35,7 +35,7 @@ not part of the deploy. Never hand-edit `public/`; every rebuild replaces it.
 ## 2. Commands
 
 ```bash
-# Build from the default snapshot into a fresh public/
+# Build from the current default snapshot into a fresh public/
 python3 scripts/build.py
 
 # Verify the generated artifact independently

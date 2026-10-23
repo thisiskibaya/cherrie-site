@@ -1,0 +1,333 @@
+/* ============================================================
+   Bakly Cinematic Hero — above-the-fold banner.
+   Presentation only. Scoped strictly to the block root.
+   - Roast Espresso (top) fades through Parisian Taupe into Cherie Creme
+     (#FFECE0) at the base, so the stage flows seamlessly into the cream
+     reveal below (no seam); the scrub then lifts the whole stage into the
+     solid creme handoff while --bakly-cine-fg stays light, so the static
+     baseline is the gradient, fully visible.
+   - Headline: DM Serif Display. Subtext/kickers/CTA: Poppins
+     (Font Library presets; graceful fallbacks when absent).
+   - Structural geometry for the entrance + satellites is applied
+     by view.js as inline styles; this sheet only styles the
+     static, no-JS / reduced-motion baseline (everything visible).
+   ============================================================ */
+.bakly-cinematic-hero {
+  --bakly-cine-bg: #B4937D;
+  --bakly-cine-fg: #F4EFE9;
+  --bakly-cine-handoff: #FFECE0;
+  --bakly-cine-reveal-fg: #552404;
+  --bakly-cine-light: #F4EFE9;
+  --bakly-cine-line-size: clamp(2.6rem, 8vw, 9.5rem);
+  --bakly-cine-stage-grad: linear-gradient(180deg, #8a5b44 0%, #96705a 32%, #B4937D 72%, var(--bakly-cine-handoff) 100%);
+  position: relative;
+  isolation: isolate;
+  background: var(--bakly-cine-stage-grad);
+  color: var(--bakly-cine-fg);
+}
+
+/* ---------- Stage ---------- */
+.bakly-cine__stage {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(4.5rem, 12vh, 7rem) var(--bakly-gutter) clamp(3rem, 8vh, 5rem);
+  background: var(--bakly-cine-stage-grad);
+  color: var(--bakly-cine-fg);
+}
+
+/* The scrub drives opacity 0 -> 1, lifting the darker start into the same
+   Parisian Taupe used at the stage's lower edge and following content. */
+.bakly-cine__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--bakly-cine-handoff);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- Copy stack (kicker + headline in flow) ---------- */
+/* Lift lives here as margin (not transform) so the front/behind split-z
+   z-indexes keep ordering against the object instead of being trapped. */
+.bakly-cine__copy {
+  position: relative;
+  min-width: 0;
+  margin-top: clamp(-6rem, -7vh, -2.5rem);
+  text-align: center;
+}
+
+/* ---------- Headline (split-z) ---------- */
+.bakly-cine__lines {
+  position: relative;
+  margin: 0;
+  text-align: center;
+  font-family: var(--wp--preset--font-family--dm-serif-display, Georgia, serif);
+  font-weight: 400;
+  line-height: 0.78;
+  letter-spacing: -0.04em;
+}
+.bakly-cine__line {
+  position: relative;
+  display: block;
+  font-size: var(--bakly-cine-line-size);
+  color: var(--bakly-cine-fg);
+  letter-spacing: -0.04em;
+}
+.bakly-cine__line.is-behind { z-index: 0; }
+.bakly-cine__line.is-front { z-index: 3; }
+
+/* Clip mask: the entrance reveals the inner span from y:110% */
+.bakly-cine__line-mask {
+  display: block;
+  overflow: hidden;
+  padding: 0.08em 0 0.2em;
+  margin: -0.08em 0 -0.2em;
+}
+.bakly-cine__line-inner { display: block; will-change: transform; }
+
+.bakly-cine__reveal-hours {
+  position: relative;
+  max-width: min(30rem, 88vw);
+  margin: 1.25rem auto 0;
+  color: rgba(85, 36, 4, 0.78);
+  font-family: var(--wp--preset--font-family--poppins, inherit);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+  will-change: opacity, transform;
+}
+.bakly-cine__reveal-hours::before {
+  display: block;
+  width: 1.5rem;
+  height: 1px;
+  margin: 0 auto 0.65rem;
+  background: currentColor;
+  content: "";
+  opacity: 0.6;
+}
+
+/* Full-headline tone ramp: ONE #bea99b -> #ffffff sweep threaded continuously
+   through all three lines. Each INNER paints the SAME gradient image — sized
+   2.8em tall (2 x line pitch 0.78em + one box 1.24em) — anchored into its
+   vertical third via background-position-y (-0.78em / -1.56em for lines 2/3),
+   so the three clipped windows sample one continuous ramp instead of three
+   separate gradients. The ramp lives on .bakly-cine__line-inner — the element
+   GSAP animates (yPercent 130 -> 0 inside the line masks) — because
+   background-clip:text on an ANCESTOR of a transformed span computes its
+   glyph mask from rest-position geometry (Chrome does not re-clip the
+   ancestor's background per composited frame): the headline painted fully
+   revealed from frame 0 and the clip-reveal never showed. The clip element
+   must be the painting element. The inner carries the filter drop-shadow
+   (it owns the painted glyphs); it sits inside the line's stacking context,
+   so the front/behind split-z against the central object is unaffected.
+   The mask idiom (padding + negative margin, net-zero layout) keeps the
+   line-height-0.78 overshoot inside each inner's gradient box; the
+   pitch/box math assumes equal-height single lines. Enabled only where
+   background-clip:text is supported; unsupported browsers keep the flat
+   --bakly-cine-fg cream. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .bakly-cine__line-inner {
+    padding: 0.12em 0 0.34em;
+    margin: -0.12em 0 -0.34em;
+    background-image: linear-gradient(180deg, #bea99b 0%, #ffffff 100%);
+    background-size: 100% 2.8em;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0.03em 0.1em rgba(31, 14, 4, 0.3));
+  }
+  .bakly-cine__line:nth-child(2) .bakly-cine__line-inner { background-position-y: -0.78em; }
+  .bakly-cine__line:nth-child(3) .bakly-cine__line-inner { background-position-y: -1.56em; }
+}
+
+/* Editorial interlock stagger (reference). */
+.bakly-cine__line:nth-child(1) { transform: translateX(-5%); }
+.bakly-cine__line:nth-child(2) { transform: translateX(6%); }
+.bakly-cine__line:nth-child(3) { transform: translateX(-2%); }
+
+/* ---------- Central floating object (fixed frame) ---------- */
+/* The design owns a near-square frame (1/1); any image fills it via cover.
+   Geometry is a pure function of viewport + width/bottom, image-independent. */
+/* Bottom-anchored so the base crops at the viewport fold and the frame
+   top rises into the headline band. Centering lives in layout
+   (bottom + left); only the horizontal translateX(-50%) remains in transform,
+   so GSAP's yPercent scrub rides on top without stripping the centering.
+   Mask/blend untouched. */
+.bakly-cine__object {
+  position: absolute;
+  top: auto;
+  bottom: clamp(-13rem, -11vh, -6rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: min(38rem, 46%, 68svh);
+  aspect-ratio: 1 / 1;
+  pointer-events: none;
+  will-change: transform;
+}
+.bakly-cine__object-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  display: block;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 72% 68% at 50% 42%, #000 54%, transparent 100%);
+  mask-image: radial-gradient(ellipse 72% 68% at 50% 42%, #000 54%, transparent 100%);
+}
+/* Single centered kicker in headline flow (above the lines). */
+.bakly-cine__kicker {
+  position: relative;
+  z-index: 4;
+  margin: 0 0 1.1rem;
+  font-family: var(--wp--preset--font-family--poppins, inherit);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--bakly-cine-fg);
+  will-change: opacity;
+}
+
+/* Centered bottom link over the object wrapper. */
+.bakly-cine__cta {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: clamp(2rem, 5vh, 3rem);
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--wp--preset--font-family--poppins, inherit);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--bakly-cine-light);
+  text-shadow: 0 2px 16px rgba(30, 10, 2, 0.65);
+  will-change: opacity;
+}
+a.bakly-cine__cta:hover { color: var(--bakly-cine-light); text-decoration: underline; text-underline-offset: 0.3em; }
+
+/* ---------- Decorations ---------- */
+.bakly-cine__orbit {
+  position: absolute;
+  top: 48%;
+  left: 47%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  width: min(78rem, 132%);
+  max-width: 100vw;
+  aspect-ratio: 1 / 0.84;
+  color: var(--bakly-cine-fg);
+  opacity: 0.25;
+  pointer-events: none;
+}
+.bakly-cine__orbit svg { width: 100%; height: 100%; display: block; }
+.bakly-cine__orbit-arc { stroke-dasharray: 1; stroke-dashoffset: 1; }
+
+/* Fine film grain: high-frequency desaturated noise tile carried by the
+   overlay blend over the lifted base; static by design. */
+.bakly-cine__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* ---------- Below-fold editorial handoff ---------- */
+.bakly-cine__reveal {
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+  min-height: 55svh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(5rem, 14vh, 9rem) var(--bakly-gutter);
+  background: var(--bakly-cine-handoff);
+  color: var(--bakly-cine-reveal-fg);
+}
+.bakly-cine__reveal-orbit {
+  position: absolute;
+  width: min(74rem, 128vw);
+  aspect-ratio: 1 / 0.52;
+  border: 1px solid rgba(85, 36, 4, 0.2);
+  border-radius: 50%;
+  transform: rotate(-8deg) translateY(-10%);
+}
+.bakly-cine__reveal-copy {
+  position: relative;
+  z-index: 1;
+  width: min(42rem, 100%);
+  text-align: center;
+}
+.bakly-cine__reveal-kicker {
+  margin: 0 0 1rem;
+  font-family: var(--wp--preset--font-family--poppins, inherit);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.bakly-cine__reveal-title {
+  margin: 0;
+  font-family: var(--wp--preset--font-family--dm-serif-display, Georgia, serif);
+  font-size: clamp(3.25rem, 8.5vw, 8rem);
+  font-weight: 400;
+  line-height: 0.72;
+  letter-spacing: -0.04em;
+}
+/* Clip mask (same mechanic as the stage headline masks): the scrub lifts the
+   inner span from y:130%. Generous padding compensation keeps the STATIC
+   baseline from clipping descenders at 0.72 line-height. */
+.bakly-cine__reveal-title-mask {
+  display: block;
+  overflow: hidden;
+  padding: 0.12em 0.05em 0.38em;
+  margin: -0.12em 0 -0.38em;
+}
+.bakly-cine__reveal-title-inner { display: block; will-change: transform; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 781px) {
+  /* Mobile line size is sized by the LONGEST unbreakable headline word:
+     DM Serif Display words measure ~6.13em per 13 lowercase chars, so the
+     size must keep the widest word inside 100vw minus both gutters
+     (14.5vw x 6.13 = ~89vw; gutters floor to 1rem at the 320px end).
+     "Unforgettable" is the reference case that overflowed at 18vw. */
+  .bakly-cinematic-hero { --bakly-cine-line-size: clamp(2.6rem, 14.5vw, 5rem); }
+  .bakly-cine__stage { min-height: 100vh; min-height: 100svh; min-height: 100dvh; }
+  .bakly-cine__object { width: min(26rem, 98%); aspect-ratio: 1 / 1; bottom: clamp(-7rem, -6%, -2.5rem); }
+  .bakly-cine__copy { margin-top: -1.25rem; }
+  .bakly-cine__kicker { font-size: 0.64rem; max-width: 92vw; }
+  .bakly-cine__reveal-hours { max-width: 90vw; font-size: 0.58rem; letter-spacing: 0.12em; text-indent: 0.12em; }
+  .bakly-cine__reveal { min-height: 45svh; }
+  .bakly-cine__reveal-title { font-size: clamp(3.25rem, 13vw, 5rem); }
+  .bakly-cine__line:nth-child(1) { transform: translateX(-3%); }
+  .bakly-cine__line:nth-child(2) { transform: translateX(4%); }
+  .bakly-cine__line:nth-child(3) { transform: translateX(-1%); }
+}
