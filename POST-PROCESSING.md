@@ -20,7 +20,7 @@ bakery.local/
 │   ├── verify.py            # independent URL/reference gate
 │   └── overrides/           # stable, non-hashed review fixes
 ├── scrape/
-│   └── 2026-10-23-refresh-1450/
+│   └── 2026-10-24/
 │       └── bakery.local/    # immutable raw HTTrack snapshot (gitignored)
 ├── build-manifest.json      # source/output hashes + repair report
 ├── package.json             # local convenience commands
