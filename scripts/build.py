@@ -8,7 +8,7 @@ stable inputs are the files in scripts/overrides/.
 Usage:
     python3 scripts/build.py
     python3 scripts/build.py --check-repeatable
-    python3 scripts/build.py --source scrape/2026-10-25/bakery.local --output public
+    python3 scripts/build.py --source scrape/2026-10-25-refresh-2144/bakery.local --output public
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = REPO / "scrape" / "2026-10-25" / "bakery.local"
+DEFAULT_SOURCE = REPO / "scrape" / "2026-10-25-refresh-2144" / "bakery.local"
 DEFAULT_OUTPUT = REPO / "public"
 OVERRIDE_DIR = REPO / "scripts" / "overrides"
 
