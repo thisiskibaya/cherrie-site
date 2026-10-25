@@ -20,7 +20,7 @@ bakery.local/
 │   ├── verify.py            # independent URL/reference gate
 │   └── overrides/           # stable, non-hashed review fixes
 ├── scrape/
-│   └── 2026-10-24/
+│   └── 2026-10-25/
 │       └── bakery.local/    # immutable raw HTTrack snapshot (gitignored)
 ├── build-manifest.json      # source/output hashes + repair report
 ├── package.json             # local convenience commands
@@ -181,7 +181,9 @@ The source is a mirror, not a clean WordPress export. The builder repairs:
   `wp-content/uploads/.../image.html` is resolved to the real image-family
   variant (`...-scaled.jpg`, etc.).
 * **Missing image dimensions in `srcset`**: entries resolve to an existing
-  family variant; unresolved entries are removed.
+  family variant with the requested image format preferred; unresolved
+  entries are removed. This prevents a missing WebP size from silently
+  switching the browser to a JPEG when the WebP original exists.
 * **Vendor icons**: missing WooCommerce credit-card SVGs receive a fixed,
   deterministic placeholder so the stylesheet has no broken references.
 * **Unresolved images**: a neutral placeholder SVG is used and recorded in

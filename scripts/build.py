@@ -8,7 +8,7 @@ stable inputs are the files in scripts/overrides/.
 Usage:
     python3 scripts/build.py
     python3 scripts/build.py --check-repeatable
-    python3 scripts/build.py --source scrape/2026-10-24/bakery.local --output public
+    python3 scripts/build.py --source scrape/2026-10-25/bakery.local --output public
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = REPO / "scrape" / "2026-10-24" / "bakery.local"
+DEFAULT_SOURCE = REPO / "scrape" / "2026-10-25" / "bakery.local"
 DEFAULT_OUTPUT = REPO / "public"
 OVERRIDE_DIR = REPO / "scripts" / "overrides"
 
@@ -439,7 +439,7 @@ def choose_image(candidates: list[Path], original_rel: str) -> str:
         is_thumb = bool(IMAGE_STEM_DIM_RE.search(stem))
         is_scaled = "scaled" in stem
         exact_ext = path.suffix.lower() == original_ext
-        return (is_thumb, not is_scaled, not exact_ext, -path.stat().st_size, path.name.lower())
+        return (not exact_ext, is_thumb, not is_scaled, -path.stat().st_size, path.name.lower())
 
     return min(candidates, key=score).name
 
@@ -628,6 +628,7 @@ def canonicalize_srcset(value: str, base: str, root: Path, stats: dict) -> str:
     if not value.strip() or "data:" in value.lower():
         return value
     entries: list[str] = []
+    seen_urls: set[str] = set()
     for part in value.split(","):
         part = part.strip()
         if not part:
@@ -636,8 +637,9 @@ def canonicalize_srcset(value: str, base: str, root: Path, stats: dict) -> str:
         url = bits[0]
         descriptor = (" " + bits[1].strip()) if len(bits) > 1 else ""
         new_url = canonicalize_url(url, base, "asset", root, stats)
-        if new_url:
+        if new_url and new_url not in seen_urls:
             entries.append(new_url + descriptor)
+            seen_urls.add(new_url)
     return ", ".join(entries)
 
 
