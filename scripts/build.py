@@ -338,7 +338,12 @@ def script_tag_repl(match: re.Match) -> str:
         return ""
     if src and any(re.search(pattern, src, re.I) for pattern in DROP_SCRIPT_SRC):
         return ""
-    if "wp-emoji-loader" in body or "wp-emoji-release" in body:
+    if (
+        "wp-emoji-loader" in body
+        or "wp-emoji-release" in body
+        or "script#wp-emoji-settings" in body
+        or "wpEmojiSettingsSupports" in body
+    ):
         return ""
     if not src and any(marker in body for marker in INLINE_BACKEND_MARKERS):
         return ""

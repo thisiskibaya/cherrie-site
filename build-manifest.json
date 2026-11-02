@@ -2,7 +2,7 @@
   "source": "scrape/2026-11-02/bakery.local",
   "source_sha256": "2cd34dc30794b94ba26bcface73ed8111434836aad76836527e471c07c31994d",
   "output": "public",
-  "output_sha256": "5665d0f9df4f329ac0505d173d854cc36ec9e1729cf980947faa4ed7ce54a25f",
+  "output_sha256": "2e046a1624ba2ffa95e598f9e7792f52a4f4a52dafd67834c1181dace4528978",
   "files": 442,
   "pages": 38,
   "canonical_url_contract": {
