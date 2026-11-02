@@ -2,14 +2,15 @@
   "source": "scrape/2026-11-02/bakery.local",
   "source_sha256": "2cd34dc30794b94ba26bcface73ed8111434836aad76836527e471c07c31994d",
   "output": "public",
-  "output_sha256": "2e046a1624ba2ffa95e598f9e7792f52a4f4a52dafd67834c1181dace4528978",
+  "output_sha256": "58380fd9e925529c7a7d6563772cdab6f4a53f6abd2c4eb7c537806feefd4d88",
   "files": 442,
   "pages": 38,
   "canonical_url_contract": {
-    "internal_urls": "root-relative",
+    "internal_urls": "root-relative under /cherrie-site",
     "page_urls": "trailing slash",
     "index_html_in_page_links": false
   },
+  "base_path": "/cherrie-site",
   "resolved_assets": [
     "wp-content/plugins/contact-form-7/includes/css/styles.css -> wp-content/plugins/contact-form-7/includes/css/styles36b6.css",
     "wp-content/plugins/woocommerce/assets/client/blocks/wc-blocks.css -> wp-content/plugins/woocommerce/assets/client/blocks/wc-blocksdbd2.css",

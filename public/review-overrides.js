@@ -11,6 +11,10 @@
 	'use strict';
 
 	var STATIC_NOTE = 'This is a static review site. Please contact us directly to order or subscribe.';
+	var siteRoot = '/';
+	if (document.currentScript && document.currentScript.src) {
+		siteRoot = new URL('.', document.currentScript.src).pathname;
+	}
 
 	function showStaticNote(form) {
 		if (!form || !form.parentNode) {
@@ -99,11 +103,11 @@
 		var href = link.getAttribute('href') || '';
 		var destination = '';
 		if (/(?:wp-json|wp-admin|xmlrpc|wp-login|wp-comments-post)/i.test(href)) {
-			destination = '/';
+			destination = siteRoot;
 		} else if (/(?:my-account|lost-password)/i.test(href)) {
-			destination = '/contact/';
+			destination = siteRoot + 'contact/';
 		} else if (/(?:^|\/)(?:cart|checkout)(?:\/|$|\?)/i.test(href)) {
-			destination = '/shop/';
+			destination = siteRoot + 'shop/';
 		}
 		if (destination) {
 			event.preventDefault();

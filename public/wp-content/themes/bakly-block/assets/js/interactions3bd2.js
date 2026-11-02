@@ -269,7 +269,7 @@
 					controller.abort();
 				}
 				controller = new AbortController();
-				fetch( '/products.json?search=' + encodeURIComponent( q ) + '&per_page=6&catalog_visibility=visible', { signal: controller.signal } )
+				fetch( '/cherrie-site/products.json?search=' + encodeURIComponent( q ) + '&per_page=6&catalog_visibility=visible', { signal: controller.signal } )
 					.then( function ( r ) {
 						return r.ok ? r.json() : [];
 					} )

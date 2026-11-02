@@ -24,6 +24,7 @@ from urllib.parse import unquote
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO / "public"
+DEFAULT_BASE_PATH = "/cherrie-site"
 
 TEXT_SUFFIXES = {".html", ".htm", ".css", ".js", ".mjs", ".json", ".xml", ".svg", ".map", ".txt"}
 HTML_SUFFIXES = {".html", ".htm"}
@@ -136,8 +137,9 @@ def join_base(base: str, path: str) -> str:
 
 
 class Verifier:
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, base_path: str):
         self.root = root
+        self.base_path = base_path
         self.errors: list[str] = []
         self.warnings: list[str] = []
         self.checked_refs = 0
@@ -224,6 +226,17 @@ class Verifier:
             self.error(f"{rel_file}: internal URL is not root-relative: {stripped}")
             return None
         path, _ = split_ref(stripped)
+        if self.base_path:
+            if path == self.base_path:
+                path = "/"
+            elif path.startswith(self.base_path + "/"):
+                path = path[len(self.base_path):]
+            else:
+                self.error(
+                    f"{rel_file}: URL is outside the configured base path "
+                    f"{self.base_path}: {stripped}"
+                )
+                return None
         if path.endswith("/index.html") or path == "/index.html" or path.endswith("/index.htm") or path == "/index.htm":
             self.error(f"{rel_file}: internal page URL contains index.html: {stripped}")
         if REMOVED_ROUTE_RE.search(path):
@@ -359,6 +372,11 @@ class Verifier:
         except Exception as exc:
             self.error(f"build-manifest.json is not valid JSON: {exc}")
             return
+        if manifest.get("base_path", "") != self.base_path:
+            self.error(
+                "build-manifest.json base path does not match verifier setting: "
+                f"{manifest.get('base_path', '')!r} != {self.base_path!r}"
+            )
         expected = manifest.get("output_sha256")
         if self.root == DEFAULT_OUTPUT and expected:
             actual = sha256_tree(self.root)
@@ -378,6 +396,7 @@ class Verifier:
         if self.removed_route_refs:
             self.warn(f"{self.removed_route_refs} references to removed routes were reported")
         print(f"output: {self.root}")
+        print(f"base path: {self.base_path or '/'}")
         print(f"pages: {self.page_count}")
         print(f"CSS files: {self.css_count}")
         print(f"local references checked: {self.checked_refs}")
@@ -394,12 +413,26 @@ class Verifier:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--base-path", default=DEFAULT_BASE_PATH,
+                        help="URL path prefix expected for project hosting (default: /cherrie-site)")
     args = parser.parse_args()
     root = args.output if args.output.is_absolute() else (REPO / args.output)
     if not root.is_dir():
         print(f"verify: output directory not found: {root}", file=sys.stderr)
         return 2
-    return Verifier(root).run()
+    base_path = args.base_path.strip()
+    if base_path in ("", "/"):
+        base_path = ""
+    else:
+        if not base_path.startswith("/") or "?" in base_path or "#" in base_path or "\\" in base_path:
+            print(f"verify: invalid base path: {args.base_path}", file=sys.stderr)
+            return 2
+        parts = base_path.strip("/").split("/")
+        if any(part in {"", ".", ".."} for part in parts):
+            print(f"verify: invalid base path: {args.base_path}", file=sys.stderr)
+            return 2
+        base_path = "/" + "/".join(parts)
+    return Verifier(root, base_path).run()
 
 
 if __name__ == "__main__":

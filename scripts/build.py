@@ -8,7 +8,7 @@ stable inputs are the files in scripts/overrides/.
 Usage:
     python3 scripts/build.py
     python3 scripts/build.py --check-repeatable
-    python3 scripts/build.py --source scrape/2026-11-02/bakery.local --output public
+    python3 scripts/build.py --source scrape/2026-11-02/bakery.local --output public --base-path /cherrie-site
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE = REPO / "scrape" / "2026-11-02" / "bakery.local"
 DEFAULT_OUTPUT = REPO / "public"
+DEFAULT_BASE_PATH = "/cherrie-site"
 OVERRIDE_DIR = REPO / "scripts" / "overrides"
 
 TEXT_SUFFIXES = {
@@ -155,6 +156,22 @@ def log(message: str) -> None:
 
 def fail(message: str) -> "NoReturn":
     raise SystemExit(f"build: {message}")
+
+
+def normalize_base_path(value: str) -> str:
+    value = value.strip()
+    if value in ("", "/"):
+        return ""
+    if "?" in value or "#" in value or "\\" in value:
+        fail(f"invalid base path: {value}")
+    parts = value.strip("/").split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        fail(f"invalid base path: {value}")
+    return "/" + "/".join(parts)
+
+
+def site_path(path: str, base_path: str) -> str:
+    return base_path + (path if path.startswith("/") else "/" + path)
 
 
 def read_text_file(path: Path) -> str | None:
@@ -534,7 +551,8 @@ def resolve_asset(root: Path, rel: str, stats: dict) -> str | None:
     return None
 
 
-def canonicalize_url(value: str, base: str, mode: str, root: Path, stats: dict) -> str:
+def canonicalize_url(value: str, base: str, mode: str, root: Path, stats: dict,
+                     base_path: str) -> str:
     """Canonicalize one URL reference.
 
     mode: "href" (may be a page or asset), "asset" (never a page), "css".
@@ -615,7 +633,7 @@ def canonicalize_url(value: str, base: str, mode: str, root: Path, stats: dict) 
         if not page_file.is_file():
             stats["missing"].append(f"page:{canonical_rel or '/'}")
             return raw
-        return "/" + canonical_rel + query + fragment
+        return site_path("/" + canonical_rel, base_path) + query + fragment
 
     resolved = resolve_asset(root, rel, stats)
     if resolved is None:
@@ -626,10 +644,11 @@ def canonicalize_url(value: str, base: str, mode: str, root: Path, stats: dict) 
             resolved = rel
         else:
             return raw
-    return "/" + resolved + query + fragment
+    return site_path("/" + resolved, base_path) + query + fragment
 
 
-def canonicalize_srcset(value: str, base: str, root: Path, stats: dict) -> str:
+def canonicalize_srcset(value: str, base: str, root: Path, stats: dict,
+                        base_path: str) -> str:
     if not value.strip() or "data:" in value.lower():
         return value
     entries: list[str] = []
@@ -641,20 +660,21 @@ def canonicalize_srcset(value: str, base: str, root: Path, stats: dict) -> str:
         bits = part.split(None, 1)
         url = bits[0]
         descriptor = (" " + bits[1].strip()) if len(bits) > 1 else ""
-        new_url = canonicalize_url(url, base, "asset", root, stats)
+        new_url = canonicalize_url(url, base, "asset", root, stats, base_path)
         if new_url and new_url not in seen_urls:
             entries.append(new_url + descriptor)
             seen_urls.add(new_url)
     return ", ".join(entries)
 
 
-def canonicalize_css_text(css: str, base: str, root: Path, stats: dict) -> str:
+def canonicalize_css_text(css: str, base: str, root: Path, stats: dict,
+                          base_path: str) -> str:
     def url_repl(match: re.Match) -> str:
         quote = match.group("quote") or ""
         value = match.group("value").strip()
         if not value or value.startswith(("#", "%23")) or value.lower().startswith(("data:", "about:")):
             return match.group(0)
-        new = canonicalize_url(value, base, "css", root, stats)
+        new = canonicalize_url(value, base, "css", root, stats, base_path)
         if quote:
             return f"url({quote}{new}{quote})"
         return f"url({new})"
@@ -666,7 +686,7 @@ def canonicalize_css_text(css: str, base: str, root: Path, stats: dict) -> str:
         value = match.group("value").strip()
         if not value or value.lower().startswith(("data:", "http://", "https://", "//")):
             return match.group(0)
-        new = canonicalize_url(value, base, "css", root, stats)
+        new = canonicalize_url(value, base, "css", root, stats, base_path)
         return f"{match.group('prefix')}{quote}{new}{quote}"
 
     return CSS_IMPORT_RE.sub(import_repl, css)
@@ -693,7 +713,8 @@ def retarget_href(value: str) -> str:
     return value
 
 
-def canonicalize_html(text: str, base: str, root: Path, stats: dict) -> str:
+def canonicalize_html(text: str, base: str, root: Path, stats: dict,
+                      base_path: str) -> str:
     def attr_repl(match: re.Match) -> str:
         prefix = match.group("prefix")
         quote = match.group("quote")
@@ -701,15 +722,15 @@ def canonicalize_html(text: str, base: str, root: Path, stats: dict) -> str:
         low_prefix = prefix.lower()
         if "href=" in low_prefix or "action=" in low_prefix:
             value = retarget_href(value)
-            new = canonicalize_url(value, base, "href", root, stats)
+            new = canonicalize_url(value, base, "href", root, stats, base_path)
         else:
-            new = canonicalize_url(value, base, "asset", root, stats)
+            new = canonicalize_url(value, base, "asset", root, stats, base_path)
         return f"{prefix}{quote}{new}{quote}"
 
     text = ATTR_RE.sub(attr_repl, text)
 
     def srcset_repl(match: re.Match) -> str:
-        value = canonicalize_srcset(match.group("value"), base, root, stats)
+        value = canonicalize_srcset(match.group("value"), base, root, stats, base_path)
         if not value.strip():
             return ""
         return f"{match.group('prefix')}{match.group('quote')}{value}{match.group('quote')}"
@@ -717,20 +738,20 @@ def canonicalize_html(text: str, base: str, root: Path, stats: dict) -> str:
     text = SRCSET_RE.sub(srcset_repl, text)
 
     def style_attr_repl(match: re.Match) -> str:
-        value = canonicalize_css_text(match.group("value"), base, root, stats)
+        value = canonicalize_css_text(match.group("value"), base, root, stats, base_path)
         return f"{match.group('prefix')}{match.group('quote')}{value}{match.group('quote')}"
 
     text = STYLE_ATTR_RE.sub(style_attr_repl, text)
 
     def style_block_repl(match: re.Match) -> str:
-        value = canonicalize_css_text(match.group("value"), base, root, stats)
+        value = canonicalize_css_text(match.group("value"), base, root, stats, base_path)
         return f"{match.group('open')}{value}{match.group('close')}"
 
     text = STYLE_BLOCK_RE.sub(style_block_repl, text)
     return text
 
 
-def repair_importmap(root: Path, stats: dict) -> None:
+def repair_importmap(root: Path, stats: dict, base_path: str) -> None:
     candidates = sorted(
         p for p in (root / "wp-includes/js/dist/script-modules/interactivity").glob("index.min*.js")
         if p.is_file()
@@ -743,12 +764,12 @@ def repair_importmap(root: Path, stats: dict) -> None:
         )
     module_rel = candidates[-1].relative_to(root).as_posix()
     importmap_json = json.dumps(
-        {"imports": {"@wordpress/interactivity": "/" + module_rel}},
+        {"imports": {"@wordpress/interactivity": site_path("/" + module_rel, base_path)}},
         separators=(",", ":"),
         ensure_ascii=False,
     )
     modulepreload = (
-        f'<link rel="modulepreload" href="/{module_rel}" '
+        f'<link rel="modulepreload" href="{site_path("/" + module_rel, base_path)}" '
         'id="@wordpress/interactivity-js-modulepreload" data-wp-fetchpriority="low">'
     )
 
@@ -778,9 +799,15 @@ def repair_importmap(root: Path, stats: dict) -> None:
         write_text_file(html_path, text)
 
 
-def inject_overrides(root: Path, stats: dict) -> None:
-    css_tag = '<link rel="stylesheet" href="/review-overrides.css" data-review-overrides="css">'
-    js_tag = '<script src="/review-overrides.js" defer data-review-overrides="js"></script>'
+def inject_overrides(root: Path, stats: dict, base_path: str) -> None:
+    css_tag = (
+        f'<link rel="stylesheet" href="{site_path("/review-overrides.css", base_path)}" '
+        'data-review-overrides="css">'
+    )
+    js_tag = (
+        f'<script src="{site_path("/review-overrides.js", base_path)}" '
+        'defer data-review-overrides="js"></script>'
+    )
     for html_path in sorted(root.rglob("*.html")):
         text = read_text_file(html_path)
         if text is None:
@@ -799,12 +826,16 @@ def inject_overrides(root: Path, stats: dict) -> None:
         stats["pages"] += 1
 
 
-def add_static_files(root: Path, stats: dict) -> None:
+def add_static_files(root: Path, stats: dict, base_path: str) -> None:
     for name in ("review-overrides.css", "review-overrides.js", "404.html"):
         source = OVERRIDE_DIR / name
         if not source.is_file():
             fail(f"missing override file: {source}")
         shutil.copy2(source, root / name)
+    not_found = root / "404.html"
+    text = read_text_file(not_found)
+    if text is not None:
+        write_text_file(not_found, canonicalize_html(text, "", root, stats, base_path))
     # Empty, deterministic static endpoint used by the (visually hidden) search
     # script after it is detached from the WordPress Store API.
     write_text_file(root / "products.json", "[]\n")
@@ -827,7 +858,7 @@ def validate_source(source: Path, output: Path) -> None:
         fail("source and output must be separate directory trees")
 
 
-def run_pipeline(source: Path, dest: Path, stats: dict) -> None:
+def run_pipeline(source: Path, dest: Path, stats: dict, base_path: str) -> None:
     log(f"  copy -> {dest}")
     if dest.exists():
         shutil.rmtree(dest)
@@ -845,7 +876,7 @@ def run_pipeline(source: Path, dest: Path, stats: dict) -> None:
         text = clean_html(text)
         text = strip_hosts(text)
         base = posixpath.dirname(relpath(path, dest))
-        text = canonicalize_html(text, base, dest, stats)
+        text = canonicalize_html(text, base, dest, stats, base_path)
         write_text_file(path, text)
         if index % 20 == 0 or index == len(html_files):
             log(f"    html {index}/{len(html_files)}")
@@ -859,7 +890,7 @@ def run_pipeline(source: Path, dest: Path, stats: dict) -> None:
             continue
         text = clean_common_text(text)
         base = posixpath.dirname(relpath(path, dest))
-        text = canonicalize_css_text(text, base, dest, stats)
+        text = canonicalize_css_text(text, base, dest, stats, base_path)
         write_text_file(path, text)
 
     # JS/JSON/XML/SVG/maps: remove hosts and detach the theme search endpoint.
@@ -874,18 +905,21 @@ def run_pipeline(source: Path, dest: Path, stats: dict) -> None:
             continue
         text = clean_common_text(text)
         if path.suffix.lower() in JS_SUFFIXES:
-            text = text.replace("/wp-json/wc/store/v1/products", "/products.json")
+            text = text.replace(
+                "/wp-json/wc/store/v1/products",
+                site_path("/products.json", base_path),
+            )
         write_text_file(path, text)
 
     log("  import map + stable overrides")
-    repair_importmap(dest, stats)
-    inject_overrides(dest, stats)
-    add_static_files(dest, stats)
+    repair_importmap(dest, stats, base_path)
+    inject_overrides(dest, stats, base_path)
+    add_static_files(dest, stats, base_path)
     log("  pipeline stages complete")
 
 
 def build_manifest(source: Path, output: Path, source_hash: str, output_hash: str,
-                   stats: dict) -> None:
+                   stats: dict, base_path: str) -> None:
     files = sum(1 for p in output.rglob("*") if p.is_file())
     manifest = {
         "source": relpath(source, REPO) if source.is_relative_to(REPO) else str(source),
@@ -895,10 +929,11 @@ def build_manifest(source: Path, output: Path, source_hash: str, output_hash: st
         "files": files,
         "pages": stats["pages"],
         "canonical_url_contract": {
-            "internal_urls": "root-relative",
+            "internal_urls": "root-relative under " + (base_path or "/"),
             "page_urls": "trailing slash",
             "index_html_in_page_links": False,
         },
+        "base_path": base_path,
         "resolved_assets": sorted(set(stats["resolved"])),
         "placeholders": sorted(set(stats["placeholders"])),
         "removed": sorted(set(stats["removed"])),
@@ -927,12 +962,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--base-path", default=DEFAULT_BASE_PATH,
+                        help="URL path prefix for project hosting (default: /cherrie-site)")
     parser.add_argument("--check-repeatable", action="store_true",
                         help="build twice and compare content-only tree hashes")
     args = parser.parse_args()
 
     source = args.source if args.source.is_absolute() else (REPO / args.source)
     output = args.output if args.output.is_absolute() else (REPO / args.output)
+    base_path = normalize_base_path(args.base_path)
     validate_source(source, output)
 
     source_hash, _ = sha256_tree(source)
@@ -944,7 +982,7 @@ def main() -> int:
 
     log(f"source: {source}")
     log(f"source sha256: {source_hash}")
-    run_pipeline(source, temp, stats)
+    run_pipeline(source, temp, stats, base_path)
 
     if stats["missing"]:
         for item in sorted(set(stats["missing"])):
@@ -957,7 +995,7 @@ def main() -> int:
             "removed": [], "resolved": [], "placeholders": [], "missing": [],
             "warnings": [], "pages": 0,
         }
-        run_pipeline(source, check_dir, check_stats)
+        run_pipeline(source, check_dir, check_stats, base_path)
         temp_hash, _ = sha256_tree(temp)
         check_hash, _ = sha256_tree(check_dir)
         if temp_hash != check_hash:
@@ -967,7 +1005,7 @@ def main() -> int:
 
     swap_output(temp, output)
     output_hash, _ = sha256_tree(output)
-    build_manifest(source, output, source_hash, output_hash, stats)
+    build_manifest(source, output, source_hash, output_hash, stats, base_path)
 
     log(f"output: {output}")
     log(f"output sha256: {output_hash}")

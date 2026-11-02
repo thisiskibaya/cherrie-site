@@ -5,8 +5,8 @@ site. WordPress, PHP, WooCommerce, Contact Form 7, search, cart, checkout, and
 account routes are intentionally not available. Visual client-side JavaScript
 (navigation, mobile drawer, carousels, hero animation, preloader) is preserved.
 
-The deployable artifact is committed at `public/`. `vercel.json` points Vercel
-at that directory, so Vercel does not need to run the build.
+The deployable artifact is committed at `public/`. GitHub Actions verifies and
+publishes that directory to GitHub Pages.
 
 ---
 
@@ -19,12 +19,13 @@ bakery.local/
 │   ├── build.py             # deterministic scrape -> public pipeline
 │   ├── verify.py            # independent URL/reference gate
 │   └── overrides/           # stable, non-hashed review fixes
+├── .github/workflows/
+│   └── pages.yml            # verify and deploy public/ to GitHub Pages
 ├── scrape/
 │   └── 2026-11-02/
 │       └── bakery.local/    # immutable raw HTTrack snapshot (gitignored)
 ├── build-manifest.json      # source/output hashes + repair report
-├── package.json             # local convenience commands
-└── vercel.json              # public output + static caching rules
+└── package.json             # local convenience commands
 ```
 
 `scrape/` is deliberately ignored by Git. It is the raw input for a rebuild,
@@ -47,22 +48,19 @@ python3 scripts/build.py --check-repeatable
 # Build a specific snapshot to a specific directory
 python3 scripts/build.py \
   --source scrape/YYYY-MM-DD/bakery.local \
-  --output public
+  --output public \
+  --base-path /cherrie-site
 ```
 
-The Vercel configuration uses:
+GitHub Pages publishes this project under `/cherrie-site/`, so all internal
+links and asset URLs in `public/` use that prefix. The build and verifier
+default to this path. Set `--base-path /` only when building for a custom
+domain served from its root.
 
-```json
-"buildCommand": "true",
-"installCommand": "true",
-"outputDirectory": "public",
-"trailingSlash": true,
-"cleanUrls": false
-```
-
-There are no rewrites, no CORS headers, and no WordPress fallback routes.
-Because `public/` is committed, a Vercel deployment serves the checked-in
-artifact without running Python.
+To enable deployment, set the repository's **Settings → Pages → Build and
+deployment → Source** to **GitHub Actions**. Each push to `main` verifies the
+committed `public/` artifact and deploys it. The workflow does not need the
+raw scrape snapshot because generated output is committed.
 
 ---
 
@@ -70,8 +68,10 @@ artifact without running Python.
 
 Every internal runtime URL must be:
 
-* **root-relative** (`/about/`, `/wp-content/...`)
-* **trailing-slash for pages** (`/about/`, `/our-menu/`)
+* **root-relative beneath `/cherrie-site/`** (`/cherrie-site/about/`,
+  `/cherrie-site/wp-content/...`)
+* **trailing-slash for pages** (`/cherrie-site/about/`,
+  `/cherrie-site/our-menu/`)
 * free of `../` and `./`
 * free of `index.html` in page links
 * free of the crawl host and production host
@@ -255,7 +255,8 @@ pipeline change, not filesystem ordering.
 6. Review `build-manifest.json` for repaired assets, placeholders, removals,
    and warnings.
 7. Commit `public/`, `build-manifest.json`, and any script/config changes.
-8. Deploy from the committed `public/` directory.
+8. Push to `main`; GitHub Actions verifies and deploys the committed `public/`
+   directory to GitHub Pages.
 
 Do not patch `public/` directly and do not patch hashed theme files. Put
 long-lived repairs in `scripts/build.py` or `scripts/overrides/`.
@@ -269,5 +270,9 @@ long-lived repairs in `scripts/build.py` or `scripts/overrides/`.
 * newsletter and enquiry form submission,
 * WordPress feeds, comments, REST API, and XML-RPC.
 
-Everything else is static and can be reviewed on Vercel using trailing-slash
-page URLs such as `/`, `/our-menu/`, `/about/`, `/shop/`, and `/contact/`.
+Everything else is static and can be reviewed on GitHub Pages using URLs such
+as `https://thisiskibaya.github.io/cherrie-site/`,
+`https://thisiskibaya.github.io/cherrie-site/our-menu/`,
+`https://thisiskibaya.github.io/cherrie-site/about/`,
+`https://thisiskibaya.github.io/cherrie-site/shop/`, and
+`https://thisiskibaya.github.io/cherrie-site/contact/`.
