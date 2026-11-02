@@ -199,7 +199,10 @@ def sha256_tree(root: Path) -> tuple[str, dict[str, str]]:
     """Content-only tree hash.  Paths are sorted; timestamps/modes are ignored."""
     digest = hashlib.sha256()
     per_file: dict[str, str] = {}
-    for path in sorted(p for p in root.rglob("*") if p.is_file()):
+    for path in sorted(
+        (p for p in root.rglob("*") if p.is_file()),
+        key=lambda p: p.relative_to(root).parts,
+    ):
         rel = relpath(path, root)
         data = path.read_bytes()
         fh = hashlib.sha256(data).hexdigest()

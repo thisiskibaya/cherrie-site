@@ -1,8 +1,8 @@
 {
   "source": "scrape/2026-11-02/bakery.local",
-  "source_sha256": "2cd34dc30794b94ba26bcface73ed8111434836aad76836527e471c07c31994d",
+  "source_sha256": "674585fa05eb11f9b58701b386fb069606bf1aa9df42e43b69c5623df9cafbbb",
   "output": "public",
-  "output_sha256": "58380fd9e925529c7a7d6563772cdab6f4a53f6abd2c4eb7c537806feefd4d88",
+  "output_sha256": "b9a5b35486dfdecf62c6ad0470fca3971b7ce21aff3d3fe888a222759a7a85bd",
   "files": 442,
   "pages": 38,
   "canonical_url_contract": {
