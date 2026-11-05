@@ -246,10 +246,15 @@ pipeline change, not filesystem ordering.
 
 ## 10. Rebuilding from a new scrape
 
-1. Put the new HTTrack output in `scrape/YYYY-MM-DD/bakery.local/`.
-   Do not put raw scrape files at the repository root.
+1. Preserve each completed HTTrack scrape in
+   `scrape/YYYY-MM-DD/bakery.local/`. If HTTrack refreshed the repository-root
+   mirror, copy only the mirrored site files into that dated snapshot; exclude
+   `.git/`, `public/`, `scripts/`, `scrape/`, and repository files such as the
+   manifest, runbook, package file, and scrape archives. Do not build from the
+   project root or overwrite an earlier snapshot.
 2. Confirm the mirror finished and that no lock file is active.
-3. Run `python3 scripts/build.py --source scrape/YYYY-MM-DD/bakery.local`.
+3. Set `DEFAULT_SOURCE` in `scripts/build.py` to the new snapshot, then run
+   `python3 scripts/build.py --source scrape/YYYY-MM-DD/bakery.local`.
 4. Run `python3 scripts/verify.py`.
 5. Run `python3 scripts/build.py --check-repeatable`.
 6. Review `build-manifest.json` for repaired assets, placeholders, removals,
