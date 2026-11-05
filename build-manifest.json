@@ -2,7 +2,7 @@
   "source": "scrape/2026-11-05/bakery.local",
   "source_sha256": "1ebdddbff313a841546633a7c67008917acf5e073e025a73f52c21fe44c13303",
   "output": "public",
-  "output_sha256": "5f37e37b279c56d84aadaaddf40ce97b181d138c2ddf07aef148322ecec78c67",
+  "output_sha256": "6d6107a24d6b3361d0dfa52f3eab597325192588f32d3e1dbf1ac83b5f10d4fb",
   "files": 297,
   "pages": 32,
   "canonical_url_contract": {
@@ -11,6 +11,12 @@
     "index_html_in_page_links": false
   },
   "base_path": "/cherrie-site",
+  "image_replacements": [
+    {
+      "target": "wp-content/uploads/2026/08/personalgraphic-com-VzUE5RtCuBA-unsplash.webp",
+      "source": "scripts/overrides/assets/mint-cake.webp"
+    }
+  ],
   "resolved_assets": [
     "wp-content/plugins/contact-form-7/includes/css/styles.css -> wp-content/plugins/contact-form-7/includes/css/styles2516.css",
     "wp-content/plugins/woocommerce/assets/client/blocks/wc-blocks.css -> wp-content/plugins/woocommerce/assets/client/blocks/wc-blocks1d0a.css",

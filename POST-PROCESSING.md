@@ -188,6 +188,10 @@ The source is a mirror, not a clean WordPress export. The builder repairs:
   deterministic placeholder so the stylesheet has no broken references.
 * **Unresolved images**: a neutral placeholder SVG is used and recorded in
   `build-manifest.json`.
+* **Intentional image swaps**: files listed in `IMAGE_REPLACEMENTS` in
+  `scripts/build.py` are replaced from `scripts/overrides/assets/` on every
+  build and recorded in `build-manifest.json`. This preserves existing URLs
+  without modifying the raw scrape.
 
 Full asset trees are kept. The build does not prune to only currently
 referenced files.

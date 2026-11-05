@@ -28,6 +28,10 @@ DEFAULT_SOURCE = REPO / "scrape" / "2026-11-05" / "bakery.local"
 DEFAULT_OUTPUT = REPO / "public"
 DEFAULT_BASE_PATH = "/cherrie-site"
 OVERRIDE_DIR = REPO / "scripts" / "overrides"
+IMAGE_REPLACEMENTS = {
+    "wp-content/uploads/2026/08/personalgraphic-com-VzUE5RtCuBA-unsplash.webp":
+        "assets/mint-cake.webp",
+}
 
 TEXT_SUFFIXES = {
     ".html", ".htm", ".css", ".js", ".mjs", ".json", ".xml", ".svg",
@@ -554,6 +558,21 @@ def resolve_asset(root: Path, rel: str, stats: dict) -> str | None:
     return None
 
 
+def apply_image_replacements(root: Path, stats: dict) -> None:
+    for target_rel, source_rel in sorted(IMAGE_REPLACEMENTS.items()):
+        target = root / target_rel
+        source = OVERRIDE_DIR / source_rel
+        if not source.is_file():
+            fail(f"image replacement source not found: {source}")
+        if not target.is_file():
+            fail(f"image replacement target not found: {target_rel}")
+        target.write_bytes(source.read_bytes())
+        stats["image_replacements"].append({
+            "target": target_rel,
+            "source": f"scripts/overrides/{source_rel}",
+        })
+
+
 def canonicalize_url(value: str, base: str, mode: str, root: Path, stats: dict,
                      base_path: str) -> str:
     """Canonicalize one URL reference.
@@ -868,6 +887,7 @@ def run_pipeline(source: Path, dest: Path, stats: dict, base_path: str) -> None:
     shutil.copytree(source, dest, symlinks=True)
     log("  clean: server routes and crawl artifacts")
     clean_tree(dest, stats)
+    apply_image_replacements(dest, stats)
 
     # HTML: remove crawl/backend markup, detach absolute hosts, canonicalize.
     html_files = sorted(dest.rglob("*.html"))
@@ -937,6 +957,7 @@ def build_manifest(source: Path, output: Path, source_hash: str, output_hash: st
             "index_html_in_page_links": False,
         },
         "base_path": base_path,
+        "image_replacements": stats["image_replacements"],
         "resolved_assets": sorted(set(stats["resolved"])),
         "placeholders": sorted(set(stats["placeholders"])),
         "removed": sorted(set(stats["removed"])),
@@ -980,7 +1001,7 @@ def main() -> int:
     temp = REPO / ".build-public.tmp"
     stats = {
         "removed": [], "resolved": [], "placeholders": [], "missing": [],
-        "warnings": [], "pages": 0,
+        "warnings": [], "pages": 0, "image_replacements": [],
     }
 
     log(f"source: {source}")
@@ -996,7 +1017,7 @@ def main() -> int:
         check_dir = REPO / ".build-public.check"
         check_stats = {
             "removed": [], "resolved": [], "placeholders": [], "missing": [],
-            "warnings": [], "pages": 0,
+            "warnings": [], "pages": 0, "image_replacements": [],
         }
         run_pipeline(source, check_dir, check_stats, base_path)
         temp_hash, _ = sha256_tree(temp)
